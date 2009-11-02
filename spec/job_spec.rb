@@ -10,6 +10,10 @@ class ErrorJob
   def perform; raise 'did not work'; end
 end             
 
+class ErrorJobWithLongErrorMessage < ErrorJob
+  def perform; raise "Unfortunately this job did not work, but then that was the whole point. In a real-world job this would probably be a large backtrace, which will almost always be bigger than what the column can hold. Increasing the size of the column probably isn't all that useful, since only the first few lines of the backtrace are usually useful anyway."; end
+end
+
 class LongRunningJob
   def perform; sleep 250; end
 end
@@ -96,7 +100,17 @@ describe Delayed::Job do
 
     M::ModuleJob.runs.should == 1
   end
-                   
+
+  it "should truncate the error message to fit in the last_error column" do
+    Delayed::Job.enqueue ErrorJobWithLongErrorMessage.new
+    Delayed::Job.work_off(1)
+
+    job = Delayed::Job.find(:first)
+
+    job.last_error.should =~ /Unfortunately this job did not work/
+    job.last_error.length.should == job.class.columns.detect {|c| c.name == 'last_error' }.limit
+  end
+
   it "should re-schedule by about 1 second at first and increment this more and more minutes when it fails to execute properly" do
     Delayed::Job.enqueue ErrorJob.new
     Delayed::Job.work_off(1)

@@ -21,6 +21,8 @@ module Delayed
     cattr_accessor :destroy_failed_jobs
     self.destroy_failed_jobs = true
 
+    before_validation :truncate_last_error
+
     # Every worker has a unique name which by default is the pid of the process.
     # There are some advantages to overriding this with something which survives worker retarts:
     # Workers can safely resume working on tasks which are locked by themselves. The worker will assume that it crashed before.
@@ -219,6 +221,12 @@ module Delayed
     end
 
   private
+
+    def truncate_last_error
+      unless last_error.blank?
+        self.last_error = last_error[0...(self.class.columns.detect {|c| c.name == 'last_error' }.limit || -1)]
+      end
+    end
 
     def deserialize(source)
       handler = YAML.load(source) rescue nil
