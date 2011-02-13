@@ -401,6 +401,25 @@ shared_examples_for 'a delayed_job backend' do
       end
     end
 
+    describe "failed jobs with long error messages" do
+      before do
+        # reset defaults
+        Delayed::Worker.destroy_failed_jobs = true
+        Delayed::Worker.max_attempts = 25
+
+        @job = Delayed::Job.enqueue(VerboseErrorJob.new)
+      end
+
+      it "should truncate the error message to fit in the last_error column" do
+        Delayed::Worker.destroy_failed_jobs = false
+        Delayed::Worker.max_attempts = 1
+        worker.run(@job)
+        @job.reload
+        @job.last_error.should =~ /Unfortunately this job did not work/
+        @job.last_error.length.should == @job.class.columns.detect {|c| c.name == 'last_error' }.limit
+      end
+    end
+
     context "reschedule" do
       before do
         @job = Delayed::Job.create :payload_object => SimpleJob.new

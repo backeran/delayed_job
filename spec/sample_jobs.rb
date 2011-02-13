@@ -14,6 +14,10 @@ class ErrorJob
   def perform; raise 'did not work'; end
 end
 
+class VerboseErrorJob < ErrorJob
+  def perform; raise "Unfortunately this job did not work, but then that was the whole point. In a real-world job this would probably be a large backtrace, which will almost always be bigger than what the column can hold. Increasing the size of the column probably isn't all that useful, since only the first few lines of the backtrace are usually useful anyway."; end
+end
+
 class CustomRescheduleJob < Struct.new(:offset)
   cattr_accessor :runs; self.runs = 0
   def perform; raise 'did not work'; end

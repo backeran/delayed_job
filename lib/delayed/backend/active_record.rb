@@ -9,6 +9,8 @@ module Delayed
         include Delayed::Backend::Base
         set_table_name :delayed_jobs
 
+        before_validation :truncate_last_error
+
         before_save :set_default_run_at
 
         scope :ready_to_run, lambda {|worker_name, max_run_time|
@@ -73,6 +75,14 @@ module Delayed
             Time.now.utc
           else
             Time.now
+          end
+        end
+
+        private
+
+        def truncate_last_error
+          unless last_error.blank?
+            self.last_error = last_error[0...(self.class.columns.detect {|c| c.name == 'last_error' }.limit || -1)]
           end
         end
 
