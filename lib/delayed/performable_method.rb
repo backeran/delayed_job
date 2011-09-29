@@ -25,7 +25,11 @@ module Delayed
     end
 
     def respond_to?(symbol, include_private=false)
-      super || object.respond_to?(symbol, include_private)
+      (super || object.respond_to?(symbol, include_private)).tap {|result|
+        # puts "\n\n\n"
+        # " -->    #{object}.respond_to?(:#{symbol}) #=> #{result}".tapp
+        # puts caller * "\n"
+      }
     end
   end
 end

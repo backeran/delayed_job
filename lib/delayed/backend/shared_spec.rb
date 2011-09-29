@@ -244,6 +244,7 @@ shared_examples_for 'a delayed_job backend' do
     it "should parse from handler on deserialization error" do
       job = Story.create(:text => "...").delay.text
       job.payload_object.object.destroy
+      # ir b
       job.reload.name.should == 'Delayed::PerformableMethod'
     end
   end

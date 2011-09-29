@@ -1,5 +1,25 @@
 $:.unshift(File.dirname(__FILE__) + '/../lib')
 
+class Object
+  # Log and return unmodified in the same manner as #tapp, but escape the
+  # output to be HTML safe and easily readable. For example,
+  #   #<Object:0x00000100bda208>
+  # becomes
+  #   #&lt;Object:0x00000100bda208><br />
+  def tapp
+    tap { puts "#{File.basename caller[2]}: #{self.inspect}" }
+  end
+  def taph
+    tap {
+      puts "<pre>" +
+        "#{File.basename caller[2]}: #{inspect}".gsub('&', '&amp;').gsub('<', '&lt;') +
+        "</pre>"
+    }
+  end
+end
+
+require 'ir_b'
+
 require 'rubygems'
 require 'bundler/setup'
 require 'rspec'
